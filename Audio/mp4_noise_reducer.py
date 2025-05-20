@@ -8,13 +8,9 @@ import sys
 import traceback
 import subprocess
 import tempfile
-# Try alternative import approach for moviepy
-try:
-    from moviepy.editor import VideoFileClip
-except ImportError:
-    # Fallback import approach
-    import moviepy
-    VideoFileClip = moviepy.video.io.VideoFileClip.VideoFileClip
+
+import moviepy
+VideoFileClip = moviepy.video.io.VideoFileClip.VideoFileClip
 # https://github.com/facebookresearch/denoiser
 # !pip install denoiser
 # import torch
