@@ -6,6 +6,8 @@ import os
 import numpy as np
 import sys
 import traceback
+import subprocess
+import tempfile
 # Try alternative import approach for moviepy
 try:
     from moviepy.editor import VideoFileClip
@@ -45,6 +47,45 @@ except ImportError:
     
 #     return enhanced, sr
 
+def extract_audio_with_ffmpeg(mp4_file_path, output_path, debug=True):
+    """Extract audio from MP4 file using ffmpeg directly.
+    
+    Args:
+        mp4_file_path: Path to the MP4 file
+        output_path: Path to save the extracted audio
+        debug: Whether to print detailed debug information
+        
+    Returns:
+        True if extraction was successful, False otherwise
+    """
+    try:
+        if debug: print(f"Extracting audio from MP4 file using ffmpeg: {mp4_file_path}")
+        
+        # Use ffmpeg to extract audio
+        cmd = ['ffmpeg', '-i', mp4_file_path, '-vn', '-acodec', 'pcm_s16le', '-ar', '16000', '-ac', '1', output_path, '-y']
+        if debug: print(f"Running command: {' '.join(cmd)}")
+        
+        # Run the command
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        stdout, stderr = process.communicate()
+        
+        # Check if the command was successful
+        if process.returncode != 0:
+            if debug:
+                print(f"Error extracting audio with ffmpeg: {stderr.decode()}")
+            return False
+            
+        return True
+    except Exception as e:
+        if debug:
+            print(f"Error during ffmpeg audio extraction: {e}")
+            traceback.print_exc()
+        return False
+
 def noise_reduce_mp4(mp4_file_path, output_path=None, debug=True):
     """Extract audio from MP4 file and apply noise reduction.
     
@@ -62,22 +103,34 @@ def noise_reduce_mp4(mp4_file_path, output_path=None, debug=True):
             if debug: print(f"Error: File not found: {mp4_file_path}")
             return None, None
             
-        # Extract audio from MP4 file
-        if debug: print(f"Extracting audio from MP4 file: {mp4_file_path}")
-        video = VideoFileClip(mp4_file_path)
-        
-        # Check if video has audio
-        if video.audio is None:
-            if debug: print("Error: The video file does not have an audio track")
-            video.close()
-            return None, None
-            
+        # Extract audio from MP4 file using ffmpeg directly
         temp_audio_path = "temp_audio.wav"
         
-        # Write audio to temporary WAV file
-        if debug: print("Writing audio to temporary file...")
-        video.audio.write_audiofile(temp_audio_path, codec='pcm_s16le', logger=None)
-        video.close()
+        # Extract audio
+        if debug: print(f"Extracting audio from MP4 file: {mp4_file_path}")
+        extraction_success = extract_audio_with_ffmpeg(mp4_file_path, temp_audio_path, debug)
+        
+        if not extraction_success:
+            # Fall back to moviepy if ffmpeg extraction fails
+            try:
+                if debug: print("Falling back to moviepy for audio extraction")
+                video = VideoFileClip(mp4_file_path)
+                
+                # Check if video has audio
+                if video.audio is None:
+                    if debug: print("Error: The video file does not have an audio track")
+                    video.close()
+                    return None, None
+                    
+                # Write audio to temporary WAV file
+                if debug: print("Writing audio to temporary file...")
+                video.audio.write_audiofile(temp_audio_path, codec='pcm_s16le', logger=None)
+                video.close()
+            except Exception as e:
+                if debug: print(f"Moviepy extraction also failed: {e}")
+                if os.path.exists(temp_audio_path):
+                    os.remove(temp_audio_path)
+                return None, None
         
         # Check if temp file was created and has content
         if not os.path.exists(temp_audio_path):

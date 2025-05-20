@@ -491,3 +491,101 @@ def extract_complete_trajectory_features(utterance, sample_rate=16000):
         return {'error': str(e)}
     
     return features
+
+def compute_joy_signature_only(utterance, sample_rate=16000):
+    """
+    Extract only the joy_signature feature from a speech utterance.
+    
+    Args:
+        utterance: Audio samples
+        sample_rate: Sample rate in Hz
+        
+    Returns:
+        float: joy_signature value
+    """
+    utterance = np.array(utterance)  # Ensure numpy array
+    
+    # Handle empty utterance
+    if len(utterance) == 0:
+        return 0.0
+    
+    try:
+        # Extract energy envelope
+        energy_envelope = extract_energy_envelope(utterance, sample_rate)
+        
+        # Skip if energy envelope extraction failed
+        if len(energy_envelope) == 0:
+            return 0.0
+        
+        # Calculate only the necessary features for joy_signature
+        
+        # 1. energy_trend
+        energy_trend = compute_linear_trend(energy_envelope)
+        
+        # 2. energy_dynamism
+        energy_dynamism = compute_feature_dynamism(energy_envelope)
+        
+        # 3. Burst features - extract only burst_count
+        bursts = detect_bursts(energy_envelope)
+        energy_burst_count = len(bursts)
+        
+        # 4. Peak analysis - extract only peak_count
+        if np.max(energy_envelope) > np.min(energy_envelope):
+            normalized = (energy_envelope - np.min(energy_envelope)) / (np.max(energy_envelope) - np.min(energy_envelope))
+        else:
+            normalized = np.zeros_like(energy_envelope)
+            
+        try:
+            peaks, _ = scipy.signal.find_peaks(
+                normalized,
+                distance=5,
+                prominence=0.1
+            )
+            energy_peak_count = len(peaks)
+        except Exception:
+            energy_peak_count = 0
+        
+        # 5. Compute mean_attack_rate
+        if len(energy_envelope) >= 2:
+            if np.max(energy_envelope) > np.min(energy_envelope):
+                normalized = (energy_envelope - np.min(energy_envelope)) / (np.max(energy_envelope) - np.min(energy_envelope))
+            else:
+                normalized = np.zeros_like(energy_envelope)
+                
+            attack_rates = []
+            in_attack = False
+            attack_start = 0
+            
+            for i in range(1, len(normalized)):
+                # Check for attack (significant increase)
+                if normalized[i] > normalized[i-1] + 0.05:
+                    if not in_attack:
+                        in_attack = True
+                        attack_start = i - 1
+                # Check for end of attack
+                elif in_attack:
+                    # End of attack, calculate rate
+                    attack_duration = i - attack_start
+                    attack_magnitude = normalized[i-1] - normalized[attack_start]
+                    if attack_duration > 0:
+                        attack_rates.append(attack_magnitude / attack_duration)
+                    in_attack = False
+            
+            mean_attack_rate = np.mean(attack_rates) if attack_rates else 0
+        else:
+            mean_attack_rate = 0
+        
+        # Calculate joy_signature
+        joy_signature = (
+            0.3 * energy_trend +
+            0.2 * energy_burst_count +
+            0.2 * mean_attack_rate +
+            0.15 * energy_peak_count +
+            0.15 * energy_dynamism
+        )
+        
+        return joy_signature
+        
+    except Exception as e:
+        print(f"Error extracting joy signature: {e}")
+        return 0.0
