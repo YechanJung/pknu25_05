@@ -208,3 +208,13 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+# gender_classifier
+*.pt
+*.pth
+*.pkl
+*.ptl
+*.pthl
+*.pkl
+Audio/voice-gender-classifier/
