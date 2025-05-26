@@ -12,49 +12,53 @@ bash
 
 # Clone the repository
 
+```bash
+git clone https://github.com/yechanjung/pknu25_05.git
+```
+
 # Create a virtual environment (optional but recommended)
 
+```bash
 python -m venv env
 source env/bin/activate # On Windows, use: env\Scripts\activate
+```
 
 # Install dependencies
 
+```bash
 pip install -r requirements.txt
-Requirements
-Python 3.8+
-PyTorch 1.10+
-torchaudio
-transformers
-numpy
-pandas
-scikit-learn
-matplotlib
-seaborn
-tqdm
-Directory Structure
+```
+
+## Directory Structure
+
+```
 speech-emotion-intensity/
 ├── emotion_intensity_model.py # Core model implementation
 ├── emotion_intensity_utils.py # Utility functions and evaluation scripts
 ├── main.py # Main script for running the system
 ├── requirements.txt # Dependencies
-└── README.md # This file
+└── README.md
+```
+
 Usage
 The system provides a command-line interface for different operations:
 
 1. Preprocessing a Dataset
-   bash
+   ```bash
    python main.py preprocess --data_path /path/to/audio_data --annotation_file /path/to/annotations.csv --output_dir preprocessed_data
-   The annotation file should be a CSV with at least the following columns:
+   ```
+
+The annotation file should be a CSV with at least the following columns:
 
 file_path: Path to audio file (relative to data_path)
 emotion: Emotion category (anger, happiness, sadness, fear, disgust, surprise, neutral)
 intensity: Emotion intensity (0.0-1.0) 2. Training a Model
-bash
-python main.py train --data_path /path/to/audio_data --train_annotation_file preprocessed_data/train_annotations.csv --val_annotation_file preprocessed_data/test_annotations.csv --output_dir model
-Additional training options:
 
-bash
---batch_size BATCH_SIZE Batch size (default: 16)
+```bash
+python main.py train --data_path /path/to/audio_data --train_annotation_file preprocessed_data/train_annotations.csv --val_annotation_file preprocessed_data/test_annotations.csv --output_dir model
+```
+
+<!-- --batch_size BATCH_SIZE Batch size (default: 16)
 --num_epochs NUM_EPOCHS Number of epochs (default: 30)
 --learning_rate LEARNING_RATE
 Learning rate (default: 0.0001)
@@ -82,7 +86,7 @@ python main.py compare --data_path /path/to/audio_data --annotation_file /path/t
 bash
 python main.py crossval --data_path /path/to/audio_data --annotation_file /path/to/annotations.csv --output_dir crossval --num_folds 5
 Model Architecture
-The emotion intensity detection model consists of the following components:
+The emotion intensity detection model consists of the following components: -->
 
 Feature Extraction: Wav2vec2 model is used to extract contextualized speech representations.
 Projection Layer: Instead of simple pooling operations, we use specialized projection layers that better preserve the temporal-spectral complexity of emotion manifestation in speech.
@@ -110,5 +114,7 @@ For multimodal emotion intensity detection, the system supports integration of f
 Extract facial features from videos corresponding to audio files
 Save the features as a numpy dictionary: {file_path: feature_vector}
 Enable cross-modal integration during training/evaluation
-bash
+
+```bash
 python main.py train --enable_cross_modal --facial_feature_path facial_features.npy ...
+```
