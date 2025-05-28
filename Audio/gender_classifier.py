@@ -58,10 +58,10 @@ def classify_gender(file_path):
         print(f"Error during gender classification: {e}")
         return None
 
-# if __name__ == "__main__":
-#     # Example usage
-#     example_file = "noise_evaluation/enhanced.wav"
-#     if os.path.exists(example_file):
-#         classify_gender(example_file)
-#     else:
-#         print(f"Example file not found: {example_file}")
+if __name__ == "__main__":
+    # Example usage
+    example_file = "noise_evaluation/enhanced.wav"
+    if os.path.exists(example_file):
+        classify_gender(example_file)
+    else:
+        print(f"Example file not found: {example_file}")
