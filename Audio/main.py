@@ -23,8 +23,8 @@ from sklearn.metrics import mean_absolute_error, r2_score
 from scipy.stats import kendalltau, spearmanr
 
 # Import our modules
-from emotion_intensity_model import EmotionIntensityDetector, EmotionSpeechDataset, RankNetLoss
-from emotion_intensity_utils import (
+from Audio.model.emotion_intensity_model import EmotionIntensityDetector, EmotionSpeechDataset, RankNetLoss
+from Audio.model.emotion_intensity_utils import (
     create_fold_splits, 
     extract_wav2vec_features,
     visualize_emotion_intensity_space,
@@ -1059,7 +1059,7 @@ if __name__ == "__main__":
         )
     
     elif args.command == "crossval":
-        from emotion_intensity_model import EmotionIntensityDetector, EmotionSpeechDataset
+        from Audio.model.emotion_intensity_model import EmotionIntensityDetector, EmotionSpeechDataset
         
         evaluate_model_cross_validation(
             model_class=EmotionIntensityDetector,
